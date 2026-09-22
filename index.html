@@ -1,474 +1,673 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>360dialog — From Status to Action</title>
-<style>
-  :root{
-    --ink:#12201C;
-    --ink-soft:#4A5A55;
-    --paper:#F6F4EF;
-    --panel:#FFFFFF;
-    --line:#DCE3DF;
-    --teal:#0E6B5C;
-    --teal-deep:#0A4F44;
-    --teal-tint:#E4F1EC;
-    --amber:#B9822E;
-    --amber-tint:#FBF0DD;
-    --red:#B84A3C;
-    --red-tint:#FBE9E6;
-    --green:#1D8A4F;
-    --green-tint:#E7F5EC;
-    --shadow: 0 1px 2px rgba(18,32,28,0.06), 0 8px 24px rgba(18,32,28,0.08);
-    box-sizing:border-box;
-    padding-top:env(safe-area-inset-top,0px);
-    padding-bottom:env(safe-area-inset-bottom,0px);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --ink:#EDEFEC; --ink-soft:#AEBAB5; --paper:#0F1613; --panel:#161F1B;
-      --line:#26332D; --teal:#3FC9AC; --teal-deep:#2F9C86; --teal-tint:#123028;
-      --amber:#E3B369; --amber-tint:#2C230F; --red:#E58579; --red-tint:#2E1613;
-      --green:#63D18C; --green-tint:#12281B;
-      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>360dialog — From Status to Action</title>
+  <style>
+    :root {
+      --bg: #f6f3ef;
+      --panel: #ffffff;
+      --panel-2: #f4f1ec;
+      --ink: #12201c;
+      --muted: #586461;
+      --line: #dfe8e4;
+      --teal: #0f6a5d;
+      --teal-deep: #0a4a3d;
+      --teal-soft: #e4f4ee;
+      --amber: #ba8a38;
+      --amber-soft: #fbf0dc;
+      --red: #b84c41;
+      --red-soft: #fbe8e6;
+      --green: #1a8a4d;
+      --green-soft: #eaf7ee;
+      --shadow: 0 1px 1px rgba(11, 25, 22, 0.03), 0 18px 42px rgba(15, 31, 28, 0.08);
+      --radius: 18px;
     }
-  }
-  :root[data-theme="dark"]{
-    --ink:#EDEFEC; --ink-soft:#AEBAB5; --paper:#0F1613; --panel:#161F1B;
-    --line:#26332D; --teal:#3FC9AC; --teal-deep:#2F9C86; --teal-tint:#123028;
-    --amber:#E3B369; --amber-tint:#2C230F; --red:#E58579; --red-tint:#2E1613;
-    --green:#63D18C; --green-tint:#12281B;
-    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5);
-  }
-  html{scroll-padding-top:env(safe-area-inset-top,0px);}
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    background:var(--paper);
-    color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    min-height:100%;
-    padding:32px 16px calc(32px + env(safe-area-inset-bottom,0px));
-  }
 
-  .masthead{
-    width:100%;
-    max-width:1040px;
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:24px;
-    margin-bottom:28px;
-    flex-wrap:wrap;
-  }
-  .masthead h1{
-    font-size:22px;
-    margin:0 0 4px;
-    letter-spacing:-0.01em;
-  }
-  .masthead p{
-    margin:0;
-    color:var(--ink-soft);
-    font-size:14px;
-    max-width:52ch;
-  }
-  .scenario-switch{
-    display:flex;
-    gap:8px;
-  }
-  .scenario-switch button{
-    font:inherit;
-    font-size:13px;
-    padding:8px 14px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:var(--panel);
-    color:var(--ink);
-    cursor:pointer;
-  }
-  .scenario-switch button.active{
-    background:var(--teal);
-    border-color:var(--teal);
-    color:#08211C;
-    font-weight:600;
-  }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, var(--bg) 0%, #f2efe9 100%);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
 
-  .stage{
-    width:100%;
-    max-width:1040px;
-    display:grid;
-    grid-template-columns:220px 1fr;
-    gap:28px;
-    align-items:start;
-  }
-  @media (max-width:760px){
-    .stage{grid-template-columns:1fr;}
-    .flowmap{order:2;}
-  }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 18px 56px;
+    }
 
-  .flowmap{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:16px;
-    box-shadow:var(--shadow);
-    position:sticky;
-    top:16px;
-  }
-  .flowmap h2{
-    font-size:12px;
-    text-transform:none;
-    letter-spacing:0;
-    color:var(--ink-soft);
-    margin:0 0 10px;
-    font-weight:600;
-  }
-  .flowmap .node{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-size:13px;
-    padding:7px 8px;
-    border-radius:8px;
-    color:var(--ink-soft);
-    cursor:pointer;
-    border:1px solid transparent;
-  }
-  .flowmap .node.current{
-    background:var(--teal-tint);
-    color:var(--teal-deep);
-    border-color:var(--teal);
-    font-weight:600;
-  }
-  .flowmap .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex:none;}
-  .flowmap .node.current .dot{background:var(--teal);}
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 26px;
+      flex-wrap: wrap;
+    }
 
-  .phone-wrap{
-    display:flex;
-    justify-content:center;
-  }
-  .phone{
-    width:100%;
-    max-width:380px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:22px;
-    box-shadow:var(--shadow);
-    overflow:hidden;
-  }
-  .phone-top{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:14px 16px;
-    border-bottom:1px solid var(--line);
-  }
-  .phone-top .brand{
-    width:22px;height:22px;border-radius:6px;
-    background:var(--teal);
-    flex:none;
-  }
-  .phone-top span{font-size:13px;font-weight:600;color:var(--ink-soft);}
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--teal-deep);
+      text-transform: uppercase;
+      background: var(--teal-soft);
+      border: 1px solid rgba(15, 106, 93, 0.15);
+      padding: 7px 10px;
+      border-radius: 999px;
+    }
 
-  .frame{padding:20px;min-height:460px;display:flex;flex-direction:column;gap:14px;}
-  .frame[hidden]{display:none;}
+    h1 {
+      margin: 12px 0 10px;
+      font-size: clamp(2rem, 2vw + 1.2rem, 3.2rem);
+      letter-spacing: -0.06em;
+      line-height: 1.02;
+    }
 
-  .back{
-    align-self:flex-start;
-    font:inherit;
-    font-size:13px;
-    color:var(--ink-soft);
-    background:none;
-    border:none;
-    cursor:pointer;
-    padding:2px 0;
-  }
+    .subtitle {
+      max-width: 720px;
+      font-size: 1.02rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0;
+    }
 
-  .channel-card{
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:14px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-  .channel-card .name{font-weight:600;font-size:15px;}
-  .channel-card .num{color:var(--ink-soft);font-size:13px;}
-  .pill{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    font-size:12px;
-    font-weight:600;
-    padding:4px 10px;
-    border-radius:999px;
-    width:fit-content;
-    margin-top:4px;
-  }
-  .pill.amber{background:var(--amber-tint);color:var(--amber);}
-  .pill.red{background:var(--red-tint);color:var(--red);}
-  .pill.green{background:var(--green-tint);color:var(--green);}
-  .pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+    .switcher {
+      display: inline-flex;
+      background: rgba(255,255,255,0.45);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
 
-  .meta-row{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-top:6px;}
-  .meta-row div{display:flex;flex-direction:column;gap:2px;}
-  .meta-row b{color:var(--ink);font-size:13px;font-weight:600;}
+    .switcher button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
 
-  h3{font-size:17px;margin:0;letter-spacing:-0.01em;}
-  p.copy{font-size:14px;line-height:1.5;color:var(--ink-soft);margin:0;}
+    .switcher button.active {
+      background: var(--teal);
+      color: #eaf8f5;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+    }
 
-  .checklist{display:flex;flex-direction:column;gap:10px;margin:4px 0;}
-  .checklist .step{display:flex;align-items:center;gap:10px;font-size:13px;}
-  .checklist .mark{
-    width:20px;height:20px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:11px;flex:none;border:1.5px solid var(--line);color:var(--ink-soft);
-  }
-  .checklist .step.done .mark{background:var(--teal);border-color:var(--teal);color:#08211C;}
-  .checklist .step.active .mark{border-color:var(--teal);color:var(--teal);font-weight:700;}
-  .checklist .step.done span{color:var(--ink-soft);text-decoration:none;}
-  .checklist .step.active span{font-weight:600;color:var(--ink);}
+    .hero {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 26px;
+      align-items: start;
+      margin-top: 12px;
+    }
 
-  .info-block{background:var(--paper);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink-soft);line-height:1.5;}
+    .side-panel {
+      background: rgba(255,255,255,0.65);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 16px;
+    }
 
-  .neg-list{display:flex;flex-direction:column;gap:6px;margin:2px 0;}
-  .neg-list .row{display:flex;gap:8px;font-size:13px;color:var(--ink-soft);align-items:flex-start;}
-  .neg-list .x{color:var(--red);flex:none;}
+    .side-panel h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
 
-  .btn{
-    font:inherit;
-    font-size:14px;
-    font-weight:600;
-    padding:12px 16px;
-    border-radius:10px;
-    border:none;
-    cursor:pointer;
-    text-align:left;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-  }
-  .btn.primary{background:var(--teal);color:#08211C;}
-  .btn.ghost{background:var(--paper);color:var(--ink);border:1px solid var(--line);}
-  .btn.danger-ghost{background:var(--red-tint);color:var(--red);}
-  .btn:active{transform:translateY(1px);}
-  .btn-col{display:flex;flex-direction:column;gap:8px;margin-top:auto;}
+    .flow-node {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      margin-bottom: 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--muted);
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
 
-  .helper{font-size:12px;color:var(--ink-soft);margin-top:-6px;}
+    .flow-node:hover {
+      border-color: var(--line);
+      background: rgba(255,255,255,0.3);
+    }
 
-  .qa-row{display:flex;gap:8px;}
-  .qa-row .btn{flex:1;justify-content:center;padding:10px 6px;font-size:13px;}
+    .flow-node .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #c8d2ce;
+      flex: 0 0 auto;
+    }
 
-  .footer-note{
-    width:100%;max-width:1040px;margin-top:22px;
-    font-size:12px;color:var(--ink-soft);
-    border-top:1px solid var(--line);padding-top:14px;
-  }
-</style>
+    .flow-node.current {
+      background: var(--teal-soft);
+      color: var(--teal-deep);
+      border-color: rgba(15, 106, 93, 0.18);
+      font-weight: 700;
+    }
+
+    .flow-node.current .dot {
+      background: var(--teal);
+    }
+
+    .demo-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .phone {
+      width: min(100%, 400px);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(252, 252, 252, 0.8);
+    }
+
+    .brand-mark {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--teal), var(--teal-deep));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    .statusbar span {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .screen {
+      padding: 18px 18px 22px;
+      min-height: 540px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .screen[hidden] { display: none; }
+
+    .screen-kicker {
+      margin: 0 0 -4px;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .customer-name {
+      font-weight: 700;
+      font-size: 1.02rem;
+      letter-spacing: -0.02em;
+    }
+
+    .customer-number {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .status-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+
+    .status-pill.amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .status-pill.red {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .status-pill.green {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .muted-copy {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 2px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .meta-row strong {
+      display: block;
+      color: var(--ink);
+      font-size: 0.84rem;
+      margin-top: 2px;
+    }
+
+    .button-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      padding: 12px 14px;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .btn:hover { filter: brightness(0.99); }
+    .btn:active { transform: translateY(1px); }
+
+    .btn.primary {
+      background: var(--teal);
+      color: #eaf8f5;
+    }
+
+    .btn.ghost {
+      background: var(--panel-2);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      align-self: flex-start;
+      padding: 0;
+      margin: 2px 0 2px;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.12rem;
+      letter-spacing: -0.03em;
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .check-item .mark {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .check-item.done .mark {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #eaf8f5;
+    }
+
+    .check-item.active .mark {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .check-item.active span { color: var(--ink); font-weight: 700; }
+
+    .info-box {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 13px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.6;
+    }
+
+    .info-box b {
+      color: var(--ink);
+    }
+
+    .neg-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .neg-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .neg-item .x {
+      color: var(--red);
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .helper {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.7;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .side-panel { position: static; }
+    }
+  </style>
 </head>
 <body>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">360dialog product demo</div>
+        <h1>From Status to Action</h1>
+        <p class="subtitle">A live-style prototype that clarifies onboarding and error states, turning uncertainty into a clear customer next step.</p>
+      </div>
+      <div class="switcher" aria-label="Demo state switcher">
+        <button id="setupBtn" class="active" type="button">Setting up</button>
+        <button id="errorBtn" type="button">Action required</button>
+      </div>
+    </header>
 
-<div class="masthead">
-  <div>
-    <h1>360dialog — From Status to Action</h1>
-    <p>Clickable prototype accompanying the product case study. Turning onboarding states into clear customer actions.</p>
-  </div>
-  <div class="scenario-switch">
-    <button id="startSetup" class="active">Start: Setting up</button>
-    <button id="startError">Start: Error</button>
-  </div>
-</div>
+    <main class="hero">
+      <aside class="side-panel" aria-label="Flow overview">
+        <h2>Flow</h2>
+        <div id="flowNodes"></div>
+      </aside>
 
-<div class="stage">
-  <div class="flowmap">
-    <h2>Flow</h2>
-    <div id="flowNodes"></div>
-  </div>
+      <section class="demo-wrap">
+        <div class="phone" aria-live="polite">
+          <div class="statusbar">
+            <div class="brand-mark" aria-hidden="true"></div>
+            <span>360dialog</span>
+          </div>
 
-  <div class="phone-wrap">
-    <div class="phone">
-      <div class="phone-top"><div class="brand"></div><span>360dialog</span></div>
+          <div class="screen" id="f1">
+            <p class="screen-kicker">Channels</p>
+            <div class="card">
+              <div class="customer-name">Acme Ltd.</div>
+              <div class="customer-number">+44 7700 900123</div>
+              <span class="status-pill amber"><span class="dot"></span>Setting up</span>
+              <p class="muted-copy" id="f1copy">Your channel is being configured.</p>
+              <div class="meta-row">
+                <div>Current stage<strong id="f1stage">Onboarding</strong></div>
+                <div>Last updated<strong>2 min ago</strong></div>
+              </div>
+            </div>
+            <div class="button-stack">
+              <button class="btn primary" type="button" onclick="go('f1details')">View details →</button>
+            </div>
+          </div>
 
-      <!-- FRAME 1 -->
-      <div class="frame" id="f1">
-        <p class="copy" style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:-6px;">Channels</p>
-        <div class="channel-card">
-          <div class="name">Acme Ltd.</div>
-          <div class="num">+44 7700 900123</div>
-          <span class="pill amber" id="f1pill"><span class="dot"></span>Setting up</span>
-          <p class="copy" id="f1copy">Your channel is being configured.</p>
-          <div class="meta-row">
-            <div>Current stage<b id="f1stage">Onboarding</b></div>
-            <div>Last updated<b>2 min ago</b></div>
+          <div class="screen" id="f1details" hidden>
+            <button class="back-link" type="button" onclick="go('f1')">← Back</button>
+            <h3>Channel setup</h3>
+            <div class="checklist" aria-label="Setup checklist">
+              <div class="check-item done"><span class="mark">✓</span><span>Number submitted</span></div>
+              <div class="check-item done"><span class="mark">✓</span><span>Business information</span></div>
+              <div class="check-item active"><span class="mark">●</span><span>Channel configuration</span></div>
+              <div class="check-item"><span class="mark">○</span><span>Ready</span></div>
+            </div>
+            <div class="info-box">
+              <b>Current status</b><br />
+              We’re completing your channel setup. No action is required from you right now.<br /><br />
+              Last updated: 2 minutes ago
+            </div>
+            <div class="button-stack">
+              <button class="btn ghost" type="button" onclick="go('f2')">What happens next? →</button>
+            </div>
+          </div>
+
+          <div class="screen" id="f2" hidden>
+            <button class="back-link" type="button" onclick="go('f1details')">← Back</button>
+            <h3>What’s happening?</h3>
+            <p class="muted-copy">Your channel is currently in <b style="color:var(--ink);">Setting up</b>. This means onboarding or migration is still being completed.</p>
+            <p class="muted-copy" style="font-weight:700;color:var(--ink);margin:0;">You don’t need to:</p>
+            <div class="neg-list">
+              <div class="neg-item"><span class="x">✕</span><span>resubmit your number</span></div>
+              <div class="neg-item"><span class="x">✕</span><span>create another channel</span></div>
+              <div class="neg-item"><span class="x">✕</span><span>contact support yet</span></div>
+            </div>
+            <div class="info-box">If your channel remains in this state, you can contact support and we’ll investigate.</div>
+            <div class="button-stack">
+              <button class="btn ghost" type="button">Contact support</button>
+            </div>
+          </div>
+
+          <div class="screen" id="f4" hidden>
+            <div class="card">
+              <div class="customer-name">Acme Ltd.</div>
+              <div class="customer-number">+44 7700 900123</div>
+              <span class="status-pill red"><span class="dot"></span>Action required</span>
+            </div>
+            <h3>Your channel couldn’t finish setup.</h3>
+            <p class="muted-copy">Your channel isn’t currently ready to send or receive messages.</p>
+            <p class="muted-copy" style="font-weight:700;color:var(--ink);margin:0;">Let’s figure out what happened.</p>
+            <div class="button-stack">
+              <button class="btn primary" type="button" onclick="go('f5')">Start diagnosis →</button>
+            </div>
+          </div>
+
+          <div class="screen" id="f5" hidden>
+            <button class="back-link" type="button" onclick="go('f4')">← Back</button>
+            <h3>First, let’s check your number</h3>
+            <p class="muted-copy">Is this number currently connected to WhatsApp Business App?</p>
+            <div class="button-stack">
+              <button class="btn ghost" type="button" onclick="go('f7')">Yes</button>
+              <button class="btn ghost" type="button" onclick="go('f8')">No</button>
+              <button class="btn ghost" type="button" onclick="go('f6')">I’m not sure</button>
+            </div>
+            <p class="helper">If you’re unsure, we’ll show you how to check.</p>
+          </div>
+
+          <div class="screen" id="f6" hidden>
+            <button class="back-link" type="button" onclick="go('f5')">← Back</button>
+            <h3>How to check</h3>
+            <p class="muted-copy">Open WhatsApp and send a message to this number. Look for the Business Account label or the relevant system message.</p>
+            <p class="muted-copy" style="font-weight:700;color:var(--ink);margin:0;">Found it?</p>
+            <div class="button-stack">
+              <button class="btn ghost" type="button" onclick="go('f7')">Yes, it’s a Business Account</button>
+              <button class="btn ghost" type="button" onclick="go('f8')">No, it’s not</button>
+            </div>
+          </div>
+
+          <div class="screen" id="f7" hidden>
+            <button class="back-link" type="button" onclick="go('f5')">← Back</button>
+            <h3>Coexistence</h3>
+            <p class="muted-copy">This number is connected to WhatsApp Business App. You can use the same number with WhatsApp Business App + WhatsApp Business Platform. This is called <b style="color:var(--ink);">Coexistence</b>.</p>
+            <div class="button-stack">
+              <button class="btn primary" type="button" onclick="go('f8')">Continue with Coexistence →</button>
+              <button class="btn ghost" type="button" onclick="go('f8')">I want API only →</button>
+            </div>
+          </div>
+
+          <div class="screen" id="f8" hidden>
+            <div class="card">
+              <div class="customer-name">Acme Ltd.</div>
+              <div class="customer-number">+44 7700 900123</div>
+              <span class="status-pill green" id="f8pill"><span class="dot"></span>You're ready</span>
+              <p class="muted-copy" id="f8copy">Your WhatsApp channel is live. You can now send and receive messages through the API.</p>
+            </div>
+            <div class="button-stack" id="f8actions">
+              <button class="btn primary" type="button" onclick="sendTest()">Send a test message →</button>
+            </div>
           </div>
         </div>
-        <div class="btn-col">
-          <button class="btn primary" onclick="go('f1details')">View details →</button>
-        </div>
-      </div>
+      </section>
+    </main>
 
-      <!-- FRAME 2 -->
-      <div class="frame" id="f1details" hidden>
-        <button class="back" onclick="go('f1')">← Back</button>
-        <h3>Channel setup</h3>
-        <div class="checklist">
-          <div class="step done"><span class="mark">✓</span><span>Number submitted</span></div>
-          <div class="step done"><span class="mark">✓</span><span>Business information</span></div>
-          <div class="step active"><span class="mark">●</span><span>Channel configuration</span></div>
-          <div class="step"><span class="mark">○</span><span>Ready</span></div>
-        </div>
-        <div class="info-block">
-          <b style="color:var(--ink);">Current status</b><br>
-          We're completing your channel setup. No action is required from you right now.<br><br>
-          Last updated: 2 minutes ago
-        </div>
-        <div class="btn-col">
-          <button class="btn ghost" onclick="go('f2')">What happens next? →</button>
-        </div>
-      </div>
-
-      <!-- FRAME 3 -->
-      <div class="frame" id="f2" hidden>
-        <button class="back" onclick="go('f1details')">← Back</button>
-        <h3>What's happening?</h3>
-        <p class="copy">Your channel is currently in <b style="color:var(--ink);">Setting up</b>. This means onboarding or migration is still being completed.</p>
-        <p class="copy" style="font-weight:600;color:var(--ink);margin-top:4px;">You don't need to:</p>
-        <div class="neg-list">
-          <div class="row"><span class="x">✕</span>resubmit your number</div>
-          <div class="row"><span class="x">✕</span>create another channel</div>
-          <div class="row"><span class="x">✕</span>contact support yet</div>
-        </div>
-        <div class="info-block">If your channel remains in this state, you can contact support and we'll investigate.</div>
-        <div class="btn-col">
-          <button class="btn ghost">Contact support</button>
-        </div>
-      </div>
-
-      <!-- FRAME 4 -->
-      <div class="frame" id="f4" hidden>
-        <div class="channel-card">
-          <div class="name">Acme Ltd.</div>
-          <div class="num">+44 7700 900123</div>
-          <span class="pill red"><span class="dot"></span>Action required</span>
-        </div>
-        <h3>Your channel couldn't finish setup.</h3>
-        <p class="copy">Your channel isn't currently ready to send or receive messages.</p>
-        <p class="copy" style="font-weight:600;color:var(--ink);">Let's figure out what happened.</p>
-        <div class="btn-col">
-          <button class="btn primary" onclick="go('f5')">Start diagnosis →</button>
-        </div>
-      </div>
-
-      <!-- FRAME 5 -->
-      <div class="frame" id="f5" hidden>
-        <button class="back" onclick="go('f4')">← Back</button>
-        <h3>First, let's check your number</h3>
-        <p class="copy">Is this number currently connected to WhatsApp Business App?</p>
-        <div class="btn-col">
-          <button class="btn ghost" onclick="go('f7')">Yes</button>
-          <button class="btn ghost" onclick="go('f8')">No</button>
-          <button class="btn ghost" onclick="go('f6')">I'm not sure</button>
-        </div>
-        <p class="helper">If you're unsure, we'll show you how to check.</p>
-      </div>
-
-      <!-- FRAME 6 -->
-      <div class="frame" id="f6" hidden>
-        <button class="back" onclick="go('f5')">← Back</button>
-        <h3>How to check</h3>
-        <p class="copy">Open WhatsApp and send a message to this number. Look for the Business Account label or the relevant system message.</p>
-        <p class="copy" style="font-weight:600;color:var(--ink);">Found it?</p>
-        <div class="btn-col">
-          <button class="btn ghost" onclick="go('f7')">Yes, it's a Business Account</button>
-          <button class="btn ghost" onclick="go('f8')">No, it's not</button>
-        </div>
-      </div>
-
-      <!-- FRAME 7 -->
-      <div class="frame" id="f7" hidden>
-        <button class="back" onclick="go('f5')">← Back</button>
-        <h3>Coexistence</h3>
-        <p class="copy">This number is connected to WhatsApp Business App. You can use the same number with WhatsApp Business App + WhatsApp Business Platform. This is called <b style="color:var(--ink);">Coexistence</b>.</p>
-        <div class="btn-col">
-          <button class="btn primary" onclick="go('f8')">Continue with Coexistence →</button>
-          <button class="btn ghost" onclick="go('f8')">I want API only →</button>
-        </div>
-      </div>
-
-      <!-- FRAME 8 -->
-      <div class="frame" id="f8" hidden>
-        <div class="channel-card">
-          <div class="name">Acme Ltd.</div>
-          <div class="num">+44 7700 900123</div>
-          <span class="pill green" id="f8pill"><span class="dot"></span>You're ready</span>
-          <p class="copy" id="f8copy">Your WhatsApp channel is live. You can now send and receive messages through the API.</p>
-        </div>
-        <div class="btn-col" id="f8actions">
-          <button class="btn primary" onclick="sendTest()">Send a test message →</button>
-        </div>
-      </div>
-
+    <div class="footer-note">
+      Prototype built for a live product demo. The flow intentionally demonstrates two states: onboarding with reassurance and an error path with guided diagnosis. The repository is ready to publish on GitHub Pages as a static site.
     </div>
   </div>
-</div>
 
-<div class="footer-note">
-  Prototype built to accompany the case study "360dialog — From Status to Action." Screens follow the flow in the write-up: Frame 1 → 2 → 3 for the Setting-up path, and Frame 1 → 4 → 5 → (6) → 7/8 for the Error / diagnosis path. Use the switch above to start from either state, or contact-support and send-test-message buttons are illustrative endpoints.
-</div>
+  <script>
+    const order = ['f1', 'f1details', 'f2', 'f4', 'f5', 'f6', 'f7', 'f8'];
+    const labels = {
+      f1: '1 — Channel overview',
+      f1details: '2 — Setting-up detail',
+      f2: '3 — What’s happening?',
+      f4: '4 — Error state',
+      f5: '5 — Diagnosis',
+      f6: '6 — Help me check',
+      f7: '7 — Coexistence path',
+      f8: '8 — Ready state'
+    };
 
-<script>
-  const order = ['f1','f1details','f2','f4','f5','f6','f7','f8'];
-  const labels = {
-    f1:'1 — Channel overview',
-    f1details:'2 — Setting-up detail',
-    f2:"3 — What's happening?",
-    f4:'4 — Error state',
-    f5:'5 — Diagnosis',
-    f6:'6 — Help me check',
-    f7:'7 — Coexistence path',
-    f8:'8 — Ready state'
-  };
-  const flowNodes = document.getElementById('flowNodes');
-  order.forEach(id=>{
-    const n = document.createElement('div');
-    n.className='node';
-    n.dataset.id=id;
-    n.innerHTML = '<span class="dot"></span>'+labels[id];
-    n.onclick=()=>go(id);
-    flowNodes.appendChild(n);
-  });
-
-  function go(id){
-    order.forEach(o=>document.getElementById(o).hidden = (o!==id));
-    document.querySelectorAll('.flowmap .node').forEach(n=>{
-      n.classList.toggle('current', n.dataset.id===id);
+    const flowRoot = document.getElementById('flowNodes');
+    order.forEach((id) => {
+      const node = document.createElement('div');
+      node.className = 'flow-node';
+      node.dataset.id = id;
+      node.innerHTML = '<span class="dot"></span>' + labels[id];
+      node.onclick = () => go(id);
+      flowRoot.appendChild(node);
     });
-  }
 
-  function sendTest(){
-    document.getElementById('f8copy').textContent = 'Your channel is working.';
-    document.getElementById('f8pill').innerHTML = '<span class="dot"></span>First message sent 🎉';
-    document.getElementById('f8actions').innerHTML = '<button class="btn ghost">View channel</button>';
-  }
+    function go(id) {
+      order.forEach((o) => {
+        document.getElementById(o).hidden = o !== id;
+      });
 
-  document.getElementById('startSetup').onclick = ()=>{
-    document.getElementById('startSetup').classList.add('active');
-    document.getElementById('startError').classList.remove('active');
+      document.querySelectorAll('.flow-node').forEach((n) => {
+        n.classList.toggle('current', n.dataset.id === id);
+      });
+    }
+
+    function sendTest() {
+      const copy = document.getElementById('f8copy');
+      const pill = document.getElementById('f8pill');
+      const actions = document.getElementById('f8actions');
+
+      copy.textContent = 'Your channel is working.';
+      pill.innerHTML = '<span class="dot"></span>First message sent 🎉';
+      actions.innerHTML = '<button class="btn ghost" type="button">View channel</button>';
+    }
+
+    document.getElementById('setupBtn').onclick = () => {
+      document.getElementById('setupBtn').classList.add('active');
+      document.getElementById('errorBtn').classList.remove('active');
+      go('f1');
+    };
+
+    document.getElementById('errorBtn').onclick = () => {
+      document.getElementById('errorBtn').classList.add('active');
+      document.getElementById('setupBtn').classList.remove('active');
+      go('f4');
+    };
+
     go('f1');
-  };
-  document.getElementById('startError').onclick = ()=>{
-    document.getElementById('startError').classList.add('active');
-    document.getElementById('startSetup').classList.remove('active');
-    go('f4');
-  };
-
-  go('f1');
-</script>
+  </script>
 </body>
 </html>
